@@ -50,25 +50,26 @@ def get_article_info(url: str):
         return None
 
 
-all_articles = sorted(get_news_articles(), key=lambda x: x["article_time_datetime"], reverse=True)
+if __name__ == "__main__":
+    all_articles = sorted(get_news_articles(), key=lambda x: x["article_time_datetime"], reverse=True)
 
-for i in range(1, NUM_ITERATION + 1):
-    if not all_articles:
-        break
-    oldest_date = all_articles[-1]["article_time_str"]
-    params = {"a": "timeline", "dt": oldest_date}
-    print(f"Iter {i}, params: {params}, current total: {len(all_articles)}")
+    for i in range(1, NUM_ITERATION + 1):
+        if not all_articles:
+            break
+        oldest_date = all_articles[-1]["article_time_str"]
+        params = {"a": "timeline", "dt": oldest_date}
+        print(f"Iter {i}, params: {params}, current total: {len(all_articles)}")
 
-    new_articles = get_news_articles(params)
-    if new_articles:
-        all_articles += new_articles
-        all_articles = sorted(all_articles, key=lambda x: x["article_time_datetime"], reverse=True)
+        new_articles = get_news_articles(params)
+        if new_articles:
+            all_articles += new_articles
+            all_articles = sorted(all_articles, key=lambda x: x["article_time_datetime"], reverse=True)
 
-print(f"Total articles collected: {len(all_articles)}")
+    print(f"Total articles collected: {len(all_articles)}")
 
-for idx, article in enumerate(all_articles):
-    print(f"{idx} Parse: {article["link"]}")
-    article_text = get_article_info(article["link"])
-    article["text"] = article_text
+    for idx, article in enumerate(all_articles):
+        print(f"{idx} Parse: {article["link"]}")
+        article_text = get_article_info(article["link"])
+        article["text"] = article_text
 
-pd.DataFrame(all_articles).to_csv(OUTPUT_FILENAME, encoding="utf-8", index=False)
+    pd.DataFrame(all_articles).to_csv(OUTPUT_FILENAME, encoding="utf-8", index=False)

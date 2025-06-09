@@ -9,7 +9,8 @@ def preprocess_text(text):
         "interfaxru", "москва", "июня", "июнь", "май", "мая"
     ]
     text = text.lower()
-    text = re.sub(r"[^а-яА-ЯёЁa-zA-Z\s]", "", text)
+    text = re.sub(r"[^а-яА-ЯёЁa-zA-Z\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
     words = text.split()
     words = [word for word in words if len(word) > 2 and word not in bad_words]
     return words

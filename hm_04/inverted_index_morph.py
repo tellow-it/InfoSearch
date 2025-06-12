@@ -13,6 +13,17 @@ russian_stopwords = stopwords.words("russian")
 
 
 class InvertedIndexMorph:
+    conv_pos = {
+        'ADJF': 'ADJ',  # прилагательное (полное)
+        'ADJS': 'ADJ',  # прилагательное (краткое)
+        'ADV': 'ADV',   # наречие
+        'NOUN': 'NOUN', # сущ
+        'VERB': 'VERB', # глагол
+        'PRTF': 'ADJ',  # полное страдательное причастие
+        'PRTS': 'ADJ',  # краткое страдательное причастие
+        'GRND': 'VERB'  # деепричастие
+    }
+
     def __init__(self):
         self.index = defaultdict(set)
         self.doc_ids = set()
@@ -27,10 +38,12 @@ class InvertedIndexMorph:
         text = doc.lower()
         text = re.sub(r"[^а-яА-ЯёЁa-zA-Z\s]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        words = text.split()
-        words = [word for word in words if len(word) > 2 and word not in bad_words]
-        words = [word for word in words if word not in russian_stopwords]
-        words = [morph.parse(word)[0].normal_form for word in words]
+        words = []
+        for word in text.split():
+            if len(word) > 2 and word not in bad_words and word not in russian_stopwords:
+                pv = morph.parse(word)[0]
+                if pv.tag.POS is not None and pv.tag.POS in InvertedIndexMorph.conv_pos:
+                    words.append(pv.normal_form)
         return words
 
     def add_doc(self, doc_id, doc):
@@ -46,7 +59,6 @@ class InvertedIndexMorph:
 
     def search(self, query):
         words = self.tokenize(query)
-        print(words)
         if not words:
             return set(), set()
 
@@ -76,15 +88,14 @@ if __name__ == "__main__":
     q_1 = (
         "Акционеры на собрании"
     )
-    # output: ({0, 513, 386, 387, 384, 396, 424, 429, 432, 309, 438, 55, 445, 71, 79, 84, 85, 87, 349, 482, 488, 494, 240, 113,
-    #   241, 115, 370},
-    #  {0, 513, 515, 8, 13, 526, 15, 273, 23, 541, 288, 291, 292, 293, 309, 55, 71, 78, 79, 339, 84, 85, 87, 343, ...})
+    # output: ({0, 513, 386, 387, 384, 396, 424, 429, 432, 309, 438, 55, 445, 71, ...},
+    #          {0, 513, 515, 8, 13, 526, 15, 273, 23, 541, 288, ...})
     print(inv_index.search(q_1))
     q_2 = (
         "Акционеры банка на собрании объявили о закрытии банка в связи с невозможностью выплат по вкладам"
     )
     # output: (set(),
-    #  {0, 3, 5, 6, 7, 8, 9, 10, 13, 14, 15, 18, 22, 23, 24, 27, 30, 31, 34, 36, 37, 38, 40, 42, 43, 46, 48, 49, 53, 55,...}
+    #  {0, 3, 5, 6, 7, 8, 9, 10, 13, 14, 15, 18, 22, 23, 24, 27, 30, 31, 34, 36, 37, 38, 40,...}
     print(inv_index.search(q_2))
     q_3 = (
         "рики и морти"  # проверка поиска информации, которой нет в индексе
@@ -96,3 +107,4 @@ if __name__ == "__main__":
     )
     print(inv_index.search(q_4))
     # output: (set(), set())
+    print(len(inv_index.index))
